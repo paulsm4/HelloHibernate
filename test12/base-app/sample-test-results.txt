@@ -1,0 +1,57 @@
+com.example.hellohibernate.AllTests: 
+  Runs: 4/4  Errors: 0  Failures: 0
+  
+Console:
+HibernateUtil::initSessionFactory()...
+Jan 11, 2019 6:57:40 PM org.hibernate.Version logVersion
+INFO: HHH000412: Hibernate Core {5.4.0.Final}
+Jan 11, 2019 6:57:40 PM org.hibernate.cfg.Environment <clinit>
+INFO: HHH000206: hibernate.properties not found
+Jan 11, 2019 6:57:41 PM org.hibernate.annotations.common.reflection.java.JavaReflectionManager <clinit>
+INFO: HCANN000001: Hibernate Commons Annotations {5.1.0.Final}
+Jan 11, 2019 6:57:41 PM org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl configure
+WARN: HHH10001002: Using Hibernate built-in connection pool (not for production use!)
+Jan 11, 2019 6:57:41 PM org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl buildCreator
+INFO: HHH10001005: using driver [org.h2.Driver] at URL [jdbc:h2:mem:test;INIT=RUNSCRIPT FROM 'classpath:mkdb.h2.sql']
+Jan 11, 2019 6:57:41 PM org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl buildCreator
+INFO: HHH10001001: Connection properties: {password=****, user=sa}
+Jan 11, 2019 6:57:41 PM org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl buildCreator
+INFO: HHH10001003: Autocommit mode: false
+Jan 11, 2019 6:57:41 PM org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl$PooledConnections <init>
+INFO: HHH000115: Hibernate connection pool size: 5 (min=1)
+Jan 11, 2019 6:57:42 PM org.hibernate.dialect.Dialect <init>
+INFO: HHH000400: Using dialect: org.hibernate.dialect.H2Dialect
+Jan 11, 2019 6:57:43 PM org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator initiateService
+INFO: HHH000490: Using JtaPlatform implementation: [org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform]
+
+TestTask::testSaveTask()
+  task: id=0, summary=DDD, priority=NORMAL
+Hibernate: insert into task (id, date, priority, status, summary) values (null, ?, ?, ?, ?)
+  session.save() id=3, task.getId()=3
+
+TestTask::testQueryTask()
+  task: id=0, summary=EEE, priority=NORMAL
+Hibernate: insert into task (id, date, priority, status, summary) values (null, ?, ?, ?, ?)
+Jan 11, 2019 6:57:43 PM org.hibernate.hql.internal.QueryTranslatorFactoryInitiator initiateService
+INFO: HHH000397: Using ASTQueryTranslatorFactory
+Hibernate: select task0_.id as id1_0_, task0_.date as date2_0_, task0_.priority as priority3_0_, task0_.status as status4_0_, task0_.summary as summary5_0_ from task task0_ where task0_.id=?
+  result: id=4, summary=EEE, priority=NORMAL, date=null
+
+TestTask::testListTasks()
+Hibernate: select task0_.id as id1_0_, task0_.date as date2_0_, task0_.priority as priority3_0_, task0_.status as status4_0_, task0_.summary as summary5_0_ from task task0_
+Hibernate: select updates0_.taskid as taskid3_1_0_, updates0_.id as id1_1_0_, updates0_.id as id1_1_1_, updates0_.date as date2_1_1_, updates0_.taskid as taskid3_1_1_, updates0_.text as text4_1_1_ from task_update updates0_ where updates0_.taskid=?
+Hibernate: select updates0_.taskid as taskid3_1_0_, updates0_.id as id1_1_0_, updates0_.id as id1_1_1_, updates0_.date as date2_1_1_, updates0_.taskid as taskid3_1_1_, updates0_.text as text4_1_1_ from task_update updates0_ where updates0_.taskid=?
+Hibernate: select updates0_.taskid as taskid3_1_0_, updates0_.id as id1_1_0_, updates0_.id as id1_1_1_, updates0_.date as date2_1_1_, updates0_.taskid as taskid3_1_1_, updates0_.text as text4_1_1_ from task_update updates0_ where updates0_.taskid=?
+Hibernate: select updates0_.taskid as taskid3_1_0_, updates0_.id as id1_1_0_, updates0_.id as id1_1_1_, updates0_.date as date2_1_1_, updates0_.taskid as taskid3_1_1_, updates0_.text as text4_1_1_ from task_update updates0_ where updates0_.taskid=?
+  #/records=4
+  result: id=1, summary=AAA, priority=NORMAL, date=2019-01-11 18:57:42.075
+  result: id=2, summary=BBB, priority=LOW, date=2019-01-11 18:57:42.095
+  result: id=3, summary=DDD, priority=NORMAL, date=null
+  result: id=4, summary=EEE, priority=NORMAL, date=null
+
+TestTask::testNewTask()
+  task: id=0, summary=CCC, priority=LOW, status=PENDING
+
+HibernateUtil::shutdown()...
+Jan 11, 2019 6:57:44 PM org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl$PoolState stop
+INFO: HHH10001008: Cleaning up connection pool [jdbc:h2:mem:test;INIT=RUNSCRIPT FROM 'classpath:mkdb.h2.sql']

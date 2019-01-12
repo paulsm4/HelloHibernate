@@ -1,6 +1,15 @@
 * Hibernate tutorial:
   https://www.tutorialspoint.com/hibernate
 
+* Official documentation:
+
+  - Java Persistence is the API for the management for persistence and object/relational mapping.
+    https://docs.oracle.com/javaee/7/tutorial/partpersist.htm
+    https://docs.oracle.com/javaee/7/api/javax/persistence/package-summary.html
+
+  - Hibernate ORM
+    https://hibernate.org/orm/documentation/5.4/
+
 * Background:
 
 ===================================================================================================
@@ -1095,4 +1104,249 @@ public class MyInterceptor extends EmptyInterceptor {
 		Session session = factory.withOptions().interceptor(new MyInterceptor()).openSession();
 		return session;
 	}
+
+===================================================================================================
+
+* test12: JPA-compliant, standalone example.
+  - https://www.baeldung.com/database-auditing-jpa
+    http://www.vogella.com/tutorials/JavaPersistenceAPI/article.html
+    https://www.mkyong.com/hibernate/hibernate-one-to-many-relationship-example-annotation/
+    https://vladmihalcea.com/the-best-way-to-map-an-enum-type-with-jpa-and-hibernate/
+    https://dzone.com/articles/testing-databases-junit-and
+
+  - TBD:
+    - Create base app: Hibernate, MySQL; "Task list" schema; manually create tables (mkdb.mysql.sql)
+    - Automate settings/getters (Lombock)
+    - Auto-generate tables:
+        <property name="hibernate.hbm2ddl.auto">create</property>
+        <property name="hibernate.hbm2ddl.auto">update</property>
+    - SQL Trace/logging
+    - JPA-compliant auditing: https://www.baeldung.com/database-auditing-jpa
+    - JUnit tests
+
+  1. Create base app:
+     a. Create project folder:
+        mkdir -p $PROJ/test12/base-app
+        mkdir -p $PROJ/test12/extended-app
+        cd test12/base-app
+
+     b. Create "mkdb" database script:
+        mkdb.mysql.sql:
+        --------------
+drop table if exists task;
+
+-- priority: LOW, NORMAL, HIGH
+-- status: PENDING, INPROGRESS, COMPLETED, BLOCKED, REOPENED
+create table task (
+  id int NOT NULL auto_increment,
+  summary varchar(20) NOT NULL,
+  priority varchar(10) NOT NULL default 'NORMAL', 
+  status varchar(10) NOT NULL default 'PENDING',
+  date timestamp default current_timestamp,
+  PRIMARY KEY(id)
+);
+
+drop table if exists task_update;
+
+create table task_update (
+  id int NOT NULL auto_increment,
+  taskid int NOT NULL,
+  text varchar(255) NULL,
+  date timestamp default current_timestamp,
+  PRIMARY KEY(id),
+  FOREIGN KEY fk_task(taskid)
+  REFERENCES task(id)
+);
+
+     c. Create Eclipse project for initial version, "base-app"
+        Eclipse > File > New > Maven project >
+          Simple project= Y, Location= $PROJ/test12/base-app, Working set= HelloHibernate >
+          GroupID= com.example, ArtificateId= base-app, Packaging= .jar, Name= Base app
+
+     d. Update pom.xml:
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  ...
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	<maven.compiler.source>1.8</maven.compiler.source>
+	<maven.compiler.target>1.8</maven.compiler.target>
+  </properties>
+
+  <dependencies>
+	<!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-core -->
+    ...
+	<!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+    ...
+	<!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
+    ...
+    <!-- https://mvnrepository.com/artifact/junit/junit -->
+    ...
+    <!-- https://mvnrepository.com/artifact/com.h2database/h2 -->
+    ...
+     - NOTE: JUnit and H2 are "test" scope 
+
+     e. Create hibernate.cfg.xml:
+<?xml version = "1.0" encoding = "utf-8"?>
+<!DOCTYPE hibernate-configuration SYSTEM "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+   <session-factory>
+      <property name = "hibernate.dialect">
+         org.hibernate.dialect.MySQLDialect
+      ...
+      <property name = "hibernate.connection.driver_class">
+         com.mysql.jdbc.Driver
+      <property name = "hibernate.connection.url">
+         jdbc:mysql://localhost/test
+      ...
+      <property name = "hibernate.connection.username">
+         test
+      ...
+      <property name = "hibernate.connection.password">
+         test123
+      ...
+   </session-factory>
+</hibernate-configuration>
+
+     - NOTES: 
+       - JPA-only would be "META-INF/persistence.xml"
+       - Eclipse > Project > hibernate.cfg.xml > Configure Build Path >
+         <= Verify "hellobase/src/main/java" is a "Source folder", and "Included: (All), Excluded: (None)
+
+  2. Create entities:
+     - Task.java
+       ---------
+...
+import lombok.Data;   // Use Lombok @Data to auto-generate setter/getter methods
+...
+@Entity
+@Table(name = "task")
+@Data
+public class Task {
+	public Task () {}
+	
+	public Task (String summary, Priority priority, Status status) {
+		this.summary = summary;
+		this.priority = priority.toString();
+		this.status = status.toString();
+	}
+	
+	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "id")
+	private int id;
+
+	@Column(name = "summary")
+	private String summary;
+
+	@Column(name = "priority")
+	private String priority;
+
+	@Column(name = "status")
+	private String status;
+
+	@Column(name = "date")
+	private Date date;
+	
+	// Note: we always want to fetch all updates whenever we fetch a task
+	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+	@JoinColumn(name="taskid")
+	private List<TaskUpdate> updates = new ArrayList<>();
+...
+
+     - TaskUpdate.java:
+       ---------------
+...
+import lombok.Data;  // Use Lombok to auto-generate setting/getter methods
+...
+@Entity
+@Table(name = "task_update")
+@Data
+public class TaskUpdate {
+
+   public TaskUpdate() {}
    
+   public TaskUpdate (int taskId, String updateText) {
+	   this.taskId = taskId;
+	   this.text = updateText;
+   }
+   
+   @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+   @Column(name = "id")
+   private int id;
+
+   @Column(name = "taskid")
+   private int taskId;
+
+   @Column(name = "text")
+   private String text;
+
+   @Column(name = "date")
+   private Date date;
+...
+
+  3. Create JUnit tests:
+     - NOTE: 
+       - For these tests, we'll use H2 (instead of a mock database)
+         <= Not exactly a "unit" test ... but will allow us to verify we're getting the expected results with Hibernate
+
+    a. Copy hibernate.cfg.xml and mkdb.mysql.sql from src/test/resources; modify for H2 (vs. MySql):
+       - hibernate.cfg.xml:
+            -----------------
+<?xml version = "1.0" encoding = "utf-8"?>
+<!DOCTYPE hibernate-configuration SYSTEM "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+	<session-factory>
+		<property name="hibernate.connection.driver_class">org.h2.Driver</property>
+		<property name="hibernate.connection.username">sa</property>
+		<property name="hibernate.connection.password"></property>
+		<property name="hibernate.connection.url">jdbc:h2:mem:test;INIT=RUNSCRIPT FROM 'classpath:mkdb.h2.sql'</property>
+		<property name="hibernate.dialect">org.hibernate.dialect.H2Dialect</property>
+		<property name="show_sql">true</property>
+		<property name="connection.pool_size">5</property>
+		<property name="hibernate.id.new_generator_mappings">false</property>
+        ...
+    <= NOTES: 
+       - We do NOT want to "enable hbm2dll.auto" (create, update or verify)
+       - Instead, well invoke "mkdb.h2.sql" each time a JUnit test class is invoked.
+
+          - mkdb.h2.sql:
+            ------------
+CREATE TABLE TASK (
+  ID BIGINT NOT NULL AUTO_INCREMENT,
+  SUMMARY VARCHAR(20) NOT NULL,
+  PRIORITY VARCHAR(10) NOT NULL DEFAULT 'NORMAL', 
+  STATUS VARCHAR(10) NOT NULL DEFAULT 'PENDING',
+  DATE TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY(ID)
+);                                  
+
+CREATE TABLE TASK_UPDATE (
+  ID BIGINT NOT NULL AUTO_INCREMENT,
+  TASKID BIGINT NOT NULL,
+  TEXT VARCHAR(255) NULL,
+  DATE TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY(ID)
+);
+  
+INSERT INTO TASK (SUMMARY) VALUES ('AAA');
+INSERT INTO TASK (SUMMARY, PRIORITY, STATUS) VALUES ('BBB', 'LOW', 'REOPENED');
+    <= NOTES: 
+       - We create our two tables, and insert a couple of test records
+
+     b. Create a "HibernateUtil.java" class to simplify creating a Hibernate SessionFactory once; and opening Hibernate Sessions as-needed
+        - HibernateUtil.java:
+          ------------------
+public class HibernateUtil {
+	protected static SessionFactory sessionFactory;
+    ...
+	public static void initSessionFactory() throws Exception { ... }
+    public static void shutdown() {...}
+    public static SessionFactory getSessionFactory () { return sessionFactory; }	
+	public static Session openSession() { return sessionFactory.openSession(); }
+    ...
+         
+     c. Create and execute JUnit tests
+
+  4. Complete application:
+     - TestApp.java
+
+

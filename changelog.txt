@@ -1,1 +1,2 @@
 1.09.19   PSM  Initial checkin
+1.11.19   PSM  Added new hybrid JPA/Hibernate; H2-based JUnit tests

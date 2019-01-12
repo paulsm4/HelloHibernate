@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="2.1" xmlns="http://xmlns.jcp.org/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence
+                                 http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
+    <persistence-unit name="mnf-pu" transaction-type="RESOURCE_LOCAL">
+        <!-- enable if you want xml mappings
+        <mapping-file>META-INF/orm.xml</mapping-file>
+        -->
+        <properties>
+            <!-- Configuring JDBC properties -->
+            <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/memorynotfound?serverTimezone=Europe/Brussels"/>
+            <property name="javax.persistence.jdbc.user" value="root"/>
+            <property name="javax.persistence.jdbc.password" value=""/>
+            <property name="javax.persistence.jdbc.driver" value="com.mysql.cj.jdbc.Driver"/>
+
+            <!-- Hibernate properties -->
+            <property name="hibernate.dialect" value="org.hibernate.dialect.MySQLDialect"/>
+            <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
+            <property name="hibernate.format_sql" value="false"/>
+            <property name="hibernate.show_sql" value="true"/>
+
+            <!-- batching size -->
+            <property name="hibernate.connection.autocommit" value="false"/>
+            <property name="hibernate.jdbc.batch_size" value="30"/>
+            <property name="hibernate.order_inserts" value="true"/>
+            <property name="hibernate.order_updates" value="true"/>
+            <property name="hibernate.jdbc.batch_versioned_data" value="true"/>
+
+        </properties>
+    </persistence-unit>
+</persistence>

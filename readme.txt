@@ -1536,8 +1536,43 @@ https://stackoverflow.com/questions/54163671/generationtarget-encountered-except
      - Refine Michael Remijan's "AssertAnnotations/ReflectTool" into simpler, more robust helper class(es)
      - Revisit Mockito with more realistic scenarios (e.g. Spring Boot apps, with bona fide DAOs)
 
-     
+===================================================================================================
 
+* More realistic examples with Hibernate/Mockito:
+
+/**
+ * SampleServiceTest.java
+ * 
+ * REFERENCE:
+ * https://www.luckyryan.com/2013/06/28/unit-testing-with-mockito/
+ */
+...
+   @Test
+   public void testSaveForm() {
+ 
+       SignupForm signupForm = new SignupForm();
+       signupForm.setName("AAA");
+       signupForm.setEmail("AAA@test.com");
+ 
+       when(userDao.save(any(User.class)))
+               .thenAnswer(new Answer<User>() {
+                   @Override
+                   public User answer(InvocationOnMock invocation) throws Throwable {
+                       User user = (User) invocation.getArguments()[0];
+                       user.setId(1L);
+                       return user;
+                   }
+               });
+ 
+       assertNull(signupForm.getId());
+ 
+       signupForm = sampleService.saveFrom(signupForm);
+ 
+       assertNotNull(signupForm.getId());
+       assertTrue(signupForm.getId() > 0);
+   }     
+
+===================================================================================================
            
   
 

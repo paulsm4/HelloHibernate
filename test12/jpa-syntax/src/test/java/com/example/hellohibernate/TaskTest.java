@@ -4,6 +4,9 @@
  * REFERENCE:
  * https://dzone.com/articles/unit-testing-jpastop-integration-testing
  *
+ * JUnit results: 
+ *   Runs 8/8,  Errors: 3, Failures: 2
+ *   
  * Console:
  *   TaskTest::tableTest()    PASS
  *   TaskTest::entityTest()   PASS

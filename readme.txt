@@ -1349,4 +1349,196 @@ public class HibernateUtil {
   4. Complete application:
      - TestApp.java
 
+===================================================================================================
+
+* test12: JPA (vs. Hibernate) syntax
+
+  1. Create separate, "test2", mysql database:
+     <= We're going to allow auto-generation (vs. manual mkdb*.sql file)
+
+  2. Copy $PROJ/test12/base-app => jpa-syntax
+
+  3. $PROJ/test12/jpa-syntax/pom.xml:
+  <dependencies>
+	<!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-core -->
+	<!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+	<!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
+    <!-- https://mvnrepository.com/artifact/junit/junit -->
+    <!-- https://mvnrepository.com/artifact/org.mockito/mockito-all -->
+    <= NOTE: We'll be using Mockito (instead of H2 in-memory database) for JUnit tests
+
+
+  4. $PROJ/test12/jpa-syntax/src/main/resources/META-INF/persistence.xml:
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="2.1"
+    xmlns="http://xmlns.jcp.org/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
+    <persistence-unit name="com.example.hellohibernate.jpa" transaction-type="RESOURCE_LOCAL">
+        <class>com.example.hellohibernate.Task</class>      
+        <class>com.example.hellohibernate.TaskUpdate</class>      
+        <properties>
+            <!-- Configuring The Database Connection Details -->
+            <property name="javax.persistence.jdbc.driver" value="com.mysql.cj.jdbc.Driver" />
+            <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/test2" />
+            <property name="javax.persistence.jdbc.user" value="test" />
+            <property name="javax.persistence.jdbc.password" value="test123" /> 
+			<!-- First time only,  create from schema: -->
+			<property name="javax.persistence.schema-generation.database.action" value="create" />
+			<property name="javax.persistence.schema-generation.create-source" value="script"/>
+			<property name="javax.persistence.schema-generation.create-script-source" value="META-INF/mkdb.mysql.sql" />
+			
+			<!-- Re-create each time from script: 
+			<property name="javax.persistence.schema-generation.database.action" value="drop-and-create" />
+			<property name="javax.persistence.schema-generation.create-source" value="script"/>
+			<property name="javax.persistence.schema-generation.create-script-source" value="META-INF/mkdb.mysql.sql" />
+			 -->           			
+			<!-- After DB created:
+			<property name="javax.persistence.schema-generation.database.action" value="none" />
+			  -->
+        </properties>
+    </persistence-unit>
+</persistence>
+     - NOTES: 
+       - "persistence.xml" (vs. "hibernate.cfg.xml")
+       - in "META-INF/" (vs. root directory)
+       - We'll be using "test2" (instead of "test") DB
+       - Specify all entity classes (Java "Task" and "TaskUpdate") in persistence unit "com.example.hellohibernate.jpa"
+       - javax.persistence.schema-generation.database.action= {none|create|drop-and-create}
+       - We can optionally choose:
+         a) "auto-generate schema" (default= No),
+         b) auto-generate with SQL script or reflect entities (default= parse entities for schema definition)
+
+  5. $PROJ/test12/jpa-syntax/src/main/resources/META-INF/mkdb.mysql.sql:
+drop table if exists task_update;
+drop table if exists task;
+
+-- priority: LOW, NORMAL, HIGH
+-- status: PENDING, INPROGRESS, COMPLETED, BLOCKED, REOPENED
+create table task (  id int NOT NULL auto_increment,  summary varchar(20) NOT NULL,  priority varchar(10) NOT NULL default 'NORMAL',  status varchar(10) NOT NULL default 'PENDING',  date timestamp default current_timestamp,  PRIMARY KEY(id));
+create table task_update (  id int NOT NULL auto_increment,  taskid int NOT NULL,  text varchar(255) NULL,  date timestamp default current_timestamp,  PRIMARY KEY(id),  FOREIGN KEY fk_task(taskid)  REFERENCES task(id));
+
+     - NOTES: 
+       - Originally got this:
+         ERROR: GenerationTarget encountered exception accepting command : Error executing DDL
+       - Cause: Hibernate parser seems to accept only single-line SQL statements (?!?)
+       - References:
+https://stackoverflow.com/questions/43407411/generationtarget-encountered-exception-accepting-command-error-executing-ddl-v
+https://stackoverflow.com/questions/54163671/generationtarget-encountered-exception-accepting-command-error-executing-ddl
+
+  6. Entities: Task.java, TaskUpdate.java
+     <= NO CHANGE: OK as-is
+
+  7. Driver app: 
+     <= $PROJ/test12/jpa-syntax/src/main/; many changes:
+
+     TestApp.java:
+     ------------
+	public static final String PERSISTENCE_UNIT = "com.example.hellohibernate.jpa";
+
+    private static EntityManagerFactory entityManagerFactory;
+	protected static EntityManagerFactory createEntityManagerFactory() {
+		entityManagerFactory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT);
+		return entityManagerFactory;
+
+    public void closeEntityManagerFactory() {
+		entityManagerFactory.close();
+
+	public int addTask(String summary, Priority priority) {
+		EntityManager em = null;
+		try {
+			em = entityManagerFactory.createEntityManager();
+			em.getTransaction().begin();
+			Task task = new Task(summary, priority, Status.PENDING);
+			em.persist(task);
+			em.flush();
+			Integer id = (Integer) task.getId();
+			em.getTransaction().commit();
+			return (int) id;
+		} catch (Exception e) {
+			em.getTransaction().rollback();
+			throw e;
+		} finally {
+			if (em != null)
+				em.close();
+		...
+
+	public Task listTask(int taskId) {
+		EntityManager em = null;
+		try {
+			em = entityManagerFactory.createEntityManager();
+			em.getTransaction().begin();
+			Query query = em.createQuery("FROM Task WHERE id= :taskId");
+			query.setParameter("taskId", taskId);
+			Task task = (Task) query.getResultList();
+			em.getTransaction().commit();
+			return task;
+			...
+
+	public List<Task> listTasks() {
+		EntityManager em = null;
+		try {
+			em = entityManagerFactory.createEntityManager();
+			em.getTransaction().begin();
+			Query q = em.createQuery("from Task");
+			List<Task> tasks = (List<Task>) q.getResultList();
+			em.getTransaction().commit();
+			return tasks;
+			...
+
+===================================================================================================
+
+* test12/jpa-syntax: Revisit JUnit testing
+
+  1. In test12/base-app, we wrote JUnit tests against an in-memory H2 database
+     <= This works ... but it's not really "unit testing"
+
+  2. In test12/jpa-syntax, we tried two approaches:
+     a) AssertAnnotations/ReflectTool: a DZone article that "unit tests" an entity by using Java reflection
+        <= A good idea ... but I couldn't get it to work.
+
+     b) Use Mockito to mock out javax.Persistence EntityManagerFactory, EntityManager, etc.
+        <= This didn't work either ...
+           ... because the module in question ("TestApp.java") didn't really lend itself to Mockito testing
+           A more "realistic" scenario would have DAOs between my JPA entities and the application...
+           ... and I'd use Mockito to unit test the DAOs
+
+  3. RESULTS:
+     a) AssertAnnotations/ReflectTool tests
+        JUnit results: 
+          Runs 8/8,  Errors: 3, Failures: 2
+          
+        Console:
+          TaskTest::tableTest()    PASS
+          TaskTest::entityTest()   PASS
+          TaskTest::idTest()       FAIL: GeneratedValue a = ReflectTool.getMethodAnnotation() return null => NPE
+          TaskTest::summaryTest()  FAIL: Column c = ReflectTool.getMethodAnnotation() returns null => NPE
+          TaskTest::methodsTest()  FAIL: AssertionError: Expected 2 annotations, but found 0
+          TaskTest::typeTest()     PASS
+          TaskTest::updatesTest()  FAIL: OneToMany a = ReflectTool.getMethodAnnotation() returns null => NPE 
+          TaskTest::fieldsTest()   FAIL: AssertionError: Expected 0 annotations, but found 3
+
+     b) Mockito tests:
+        EXAMPLE RUN:
+          java.lang.NullPointerException
+            at com.example.hellohibernate.TestApp.addTask(TestApp.java:47)  <-- try/catch handler
+            at com.example.hellohibernate.TestAppTest.happyPathScenario(TestAppTest.java:42)
+            at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+            ...
+        Console:
+          TestAppTest::happyPathScenario()
+          WARNING: An illegal reflective access operation has occurred
+          WARNING: Illegal reflective access by org.mockito.cglib.core.ReflectUtils$2 (file:/home/paulsm/.m2/repository/org/mockito/mockito-all/1.9.5/mockito-all-1.9.5.jar) to method java.lang.ClassLoader.defineClass(java.lang.String,byte[],int,int,java.security.ProtectionDomain)
+          WARNING: Please consider reporting this to the maintainers of org.mockito.cglib.core.ReflectUtils$2
+          WARNING: Use --illegal-access=warn to enable warnings of further illegal reflective access operations
+          WARNING: All illegal access operations will be denied in a future release
+
+  4. TBD:
+     - Refine Michael Remijan's "AssertAnnotations/ReflectTool" into simpler, more robust helper class(es)
+     - Revisit Mockito with more realistic scenarios (e.g. Spring Boot apps, with bona fide DAOs)
+
+     
+
+           
+  
+
 

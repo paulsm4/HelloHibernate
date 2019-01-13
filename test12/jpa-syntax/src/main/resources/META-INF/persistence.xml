@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="2.1"
+    xmlns="http://xmlns.jcp.org/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
+    <persistence-unit name="com.example.hellohibernate.jpa" transaction-type="RESOURCE_LOCAL">
+        <class>com.example.hellohibernate.Task</class>      
+        <class>com.example.hellohibernate.TaskUpdate</class>      
+        <properties>
+            <!-- Configuring The Database Connection Details -->
+            <property name="javax.persistence.jdbc.driver" value="com.mysql.cj.jdbc.Driver" />
+            <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/test2" />
+            <property name="javax.persistence.jdbc.user" value="test" />
+            <property name="javax.persistence.jdbc.password" value="test123" /> 
+			<!-- First time only,  create from schema: 
+			<property name="javax.persistence.schema-generation.database.action" value="create" />
+			<property name="javax.persistence.schema-generation.create-source" value="script"/>
+			<property name="javax.persistence.schema-generation.create-script-source" value="META-INF/mkdb.mysql.sql" />
+			-->
+			<!-- Re-create each time from script:
+			<property name="javax.persistence.schema-generation.database.action" value="drop-and-create" />
+			<property name="javax.persistence.schema-generation.create-source" value="script"/>
+			<property name="javax.persistence.schema-generation.create-script-source" value="META-INF/mkdb.mysql.sql" />
+			--> 
+			<!-- After DB created: -->
+			<property name="javax.persistence.schema-generation.database.action" value="none" />
+			  
+        </properties>
+    </persistence-unit>
+</persistence>

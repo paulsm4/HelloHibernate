@@ -1,0 +1,208 @@
+JRE Oracle Corporation/13.0.1 is not supported, advanced source lookup disabled.
+Saving data...
+2020-01-16_11:08:33.089 WARN  org.hibernate.orm.deprecation - HHH90000012: Recognized obsolete hibernate namespace http://hibernate.sourceforge.net/hibernate-mapping. Use namespace http://www.hibernate.org/dtd/hibernate-mapping instead.  Support for obsolete DTD/XSD namespaces may be removed at any time.
+2020-01-16_11:08:33.563 WARN  org.hibernate.orm.deprecation - HHH90000012: Recognized obsolete hibernate namespace http://hibernate.sourceforge.net/hibernate-mapping. Use namespace http://www.hibernate.org/dtd/hibernate-mapping instead.  Support for obsolete DTD/XSD namespaces may be removed at any time.
+2020-01-16_11:08:33.596 WARN  o.hibernate.orm.connections.pooling - HHH10001002: Using Hibernate built-in connection pool (not for production use!)
+Hibernate: 
+    insert 
+    into
+        stock
+        (STOCK_ID, STOCK_CODE, STOCK_NAME) 
+    values
+        (default, ?, ?)
+Hibernate: 
+    
+values
+    identity_val_local()
+Hibernate: 
+    insert 
+    into
+        stock_daily_record
+        (RECORD_ID, STOCK_ID, PRICE_OPEN, PRICE_CLOSE, PRICE_CHANGE, VOLUME, DATE) 
+    values
+        (default, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    
+values
+    identity_val_local()
+Hibernate: 
+    insert 
+    into
+        stock
+        (STOCK_ID, STOCK_CODE, STOCK_NAME) 
+    values
+        (default, ?, ?)
+Hibernate: 
+    
+values
+    identity_val_local()
+Hibernate: 
+    insert 
+    into
+        stock_daily_record
+        (RECORD_ID, STOCK_ID, PRICE_OPEN, PRICE_CLOSE, PRICE_CHANGE, VOLUME, DATE) 
+    values
+        (default, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    
+values
+    identity_val_local()
+Hibernate: 
+    insert 
+    into
+        stock
+        (STOCK_ID, STOCK_CODE, STOCK_NAME) 
+    values
+        (default, ?, ?)
+Hibernate: 
+    
+values
+    identity_val_local()
+Hibernate: 
+    insert 
+    into
+        stock
+        (STOCK_ID, STOCK_CODE, STOCK_NAME) 
+    values
+        (default, ?, ?)
+Hibernate: 
+    
+values
+    identity_val_local()
+Hibernate: 
+    insert 
+    into
+        stock_daily_record
+        (RECORD_ID, STOCK_ID, PRICE_OPEN, PRICE_CLOSE, PRICE_CHANGE, VOLUME, DATE) 
+    values
+        (default, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    
+values
+    identity_val_local()
+Hibernate: 
+    insert 
+    into
+        stock_daily_record
+        (RECORD_ID, STOCK_ID, PRICE_OPEN, PRICE_CLOSE, PRICE_CHANGE, VOLUME, DATE) 
+    values
+        (default, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    
+values
+    identity_val_local()
+Reading data...
+Hibernate: 
+    select
+        stock0_.STOCK_ID as STOCK_ID1_0_,
+        stock0_.STOCK_CODE as STOCK_CO2_0_,
+        stock0_.STOCK_NAME as STOCK_NA3_0_ 
+    from
+        stock stock0_
+Inside getStocks(), #/stocks=4
+Stock code: 7052, name: PADINI
+Hibernate: 
+    select
+        stockdaily0_.STOCK_ID as STOCK_ID2_1_0_,
+        stockdaily0_.RECORD_ID as RECORD_I1_1_0_,
+        stockdaily0_.RECORD_ID as RECORD_I1_1_1_,
+        stockdaily0_.STOCK_ID as STOCK_ID2_1_1_,
+        stockdaily0_.PRICE_OPEN as PRICE_OP3_1_1_,
+        stockdaily0_.PRICE_CLOSE as PRICE_CL4_1_1_,
+        stockdaily0_.PRICE_CHANGE as PRICE_CH5_1_1_,
+        stockdaily0_.VOLUME as VOLUME6_1_1_,
+        stockdaily0_.DATE as DATE7_1_1_ 
+    from
+        stock_daily_record stockdaily0_ 
+    where
+        stockdaily0_.STOCK_ID=?
+  Open: 1.2, close: 1.1, volume: 3000000
+Stock code: 888, name: MSFT
+Hibernate: 
+    select
+        stockdaily0_.STOCK_ID as STOCK_ID2_1_0_,
+        stockdaily0_.RECORD_ID as RECORD_I1_1_0_,
+        stockdaily0_.RECORD_ID as RECORD_I1_1_1_,
+        stockdaily0_.STOCK_ID as STOCK_ID2_1_1_,
+        stockdaily0_.PRICE_OPEN as PRICE_OP3_1_1_,
+        stockdaily0_.PRICE_CLOSE as PRICE_CL4_1_1_,
+        stockdaily0_.PRICE_CHANGE as PRICE_CH5_1_1_,
+        stockdaily0_.VOLUME as VOLUME6_1_1_,
+        stockdaily0_.DATE as DATE7_1_1_ 
+    from
+        stock_daily_record stockdaily0_ 
+    where
+        stockdaily0_.STOCK_ID=?
+  Open: 162.62, close: 163.18, volume: 5000000
+Stock code: 777, name: SVN
+Hibernate: 
+    select
+        stockdaily0_.STOCK_ID as STOCK_ID2_1_0_,
+        stockdaily0_.RECORD_ID as RECORD_I1_1_0_,
+        stockdaily0_.RECORD_ID as RECORD_I1_1_1_,
+        stockdaily0_.STOCK_ID as STOCK_ID2_1_1_,
+        stockdaily0_.PRICE_OPEN as PRICE_OP3_1_1_,
+        stockdaily0_.PRICE_CLOSE as PRICE_CL4_1_1_,
+        stockdaily0_.PRICE_CHANGE as PRICE_CH5_1_1_,
+        stockdaily0_.VOLUME as VOLUME6_1_1_,
+        stockdaily0_.DATE as DATE7_1_1_ 
+    from
+        stock_daily_record stockdaily0_ 
+    where
+        stockdaily0_.STOCK_ID=?
+Stock code: 666, name: SIX
+Hibernate: 
+    select
+        stockdaily0_.STOCK_ID as STOCK_ID2_1_0_,
+        stockdaily0_.RECORD_ID as RECORD_I1_1_0_,
+        stockdaily0_.RECORD_ID as RECORD_I1_1_1_,
+        stockdaily0_.STOCK_ID as STOCK_ID2_1_1_,
+        stockdaily0_.PRICE_OPEN as PRICE_OP3_1_1_,
+        stockdaily0_.PRICE_CLOSE as PRICE_CL4_1_1_,
+        stockdaily0_.PRICE_CHANGE as PRICE_CH5_1_1_,
+        stockdaily0_.VOLUME as VOLUME6_1_1_,
+        stockdaily0_.DATE as DATE7_1_1_ 
+    from
+        stock_daily_record stockdaily0_ 
+    where
+        stockdaily0_.STOCK_ID=?
+  Open: 10.5, close: 11.5, volume: 5000000
+  Open: 12.5, close: 13.5, volume: 5000000
+Back in main(), #/stocks=4
+Stock code: 7052, name: PADINI
+  Open: 1.2, close: 1.1, volume: 3000000
+Stock code: 888, name: MSFT
+  Open: 162.62, close: 163.18, volume: 5000000
+Stock code: 777, name: SVN
+Stock code: 666, name: SIX
+  Open: 10.5, close: 11.5, volume: 5000000
+  Open: 12.5, close: 13.5, volume: 5000000
+INNER JOIN FETCH query...
+Hibernate: 
+    select
+        distinct stock0_.STOCK_ID as STOCK_ID1_0_0_,
+        stockdaily1_.RECORD_ID as RECORD_I1_1_1_,
+        stock0_.STOCK_CODE as STOCK_CO2_0_0_,
+        stock0_.STOCK_NAME as STOCK_NA3_0_0_,
+        stockdaily1_.STOCK_ID as STOCK_ID2_1_1_,
+        stockdaily1_.PRICE_OPEN as PRICE_OP3_1_1_,
+        stockdaily1_.PRICE_CLOSE as PRICE_CL4_1_1_,
+        stockdaily1_.PRICE_CHANGE as PRICE_CH5_1_1_,
+        stockdaily1_.VOLUME as VOLUME6_1_1_,
+        stockdaily1_.DATE as DATE7_1_1_,
+        stockdaily1_.STOCK_ID as STOCK_ID2_1_0__,
+        stockdaily1_.RECORD_ID as RECORD_I1_1_0__ 
+    from
+        stock stock0_ 
+    inner join
+        stock_daily_record stockdaily1_ 
+            on stock0_.STOCK_ID=stockdaily1_.STOCK_ID
+Back in main(), #/stocks=3
+Stock code: 7052, name: PADINI
+  Open: 1.2, close: 1.1, volume: 3000000
+Stock code: 888, name: MSFT
+  Open: 162.62, close: 163.18, volume: 5000000
+Stock code: 666, name: SIX
+  Open: 10.5, close: 11.5, volume: 5000000
+  Open: 12.5, close: 13.5, volume: 5000000
+Done

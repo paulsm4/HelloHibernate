@@ -1702,6 +1702,125 @@ public class App {
 
     <<See console-log-200115a.txt>>
 
+* Results (see console-log-200115a.txt):
+  - mkyong example has a *BI-DIRECTIONAL* relationship between Stock and StockDailyRecord:
+    - src > main > resources > Stock.hbm.xml:
+      --------------------------------------
+<hibernate-mapping>
+    <class name="com.mkyong.stock.Stock" table="stock" catalog="app">
+        <id name="stockId" type="java.lang.Integer">
+            <column name="STOCK_ID" />
+            <generator class="identity" />
+            ...
+        <set name="stockDailyRecords" table="stock_daily_record" inverse="true" lazy="true" fetch="select">
+            <key>
+                <column name="STOCK_ID" not-null="true" />
+            </key>
+            <one-to-many class="com.mkyong.stock.StockDailyRecord" />
+    <= One-to-Many Record::StockDailyRecord
+    ... AND ...
+    - src > main > resources > StockDailyRecord.hbm.xml:
+      -------------------------------------------------
+<hibernate-mapping>
+    <class name="com.mkyong.stock.StockDailyRecord" table="stock_daily_record" catalog="app">
+        <id name="recordId" type="java.lang.Integer">
+            <column name="RECORD_ID" />
+            <generator class="identity" />
+            ...
+        <many-to-one name="stock" class="com.mkyong.stock.Stock" fetch="select">
+            <column name="STOCK_ID" not-null="true" />
+    <= *ALSO* Many-to-One StockDailyRecord::Record
+
+  - Hibernate "failed to lazily initialize a collection of role" error:
+    - public List<Stock> getStocks1() {
+		try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+			List<Stock> stocks = session.createQuery("From Stock").list();
+			printStocks(stocks);
+			return stocks;
+			... 
+        <= We can safely call "printStocks()" and access StockDailyRecord child records here, before we close the session
+        NOTE: This will make *two* select calls: one for the parent; a second (if, and only if) we try to read a child
+    select
+        stock0_.STOCK_ID as STOCK_ID1_0_,
+        stock0_.STOCK_CODE as STOCK_CO2_0_,
+        stock0_.STOCK_NAME as STOCK_NA3_0_ 
+    from
+        stock stock0_
+        <= Get parent
+    select
+        stockdaily0_.STOCK_ID as STOCK_ID2_1_0_,
+        stockdaily0_.RECORD_ID as RECORD_I1_1_0_,
+        stockdaily0_.RECORD_ID as RECORD_I1_1_1_,
+        stockdaily0_.STOCK_ID as STOCK_ID2_1_1_,
+        stockdaily0_.PRICE_OPEN as PRICE_OP3_1_1_,
+        stockdaily0_.PRICE_CLOSE as PRICE_CL4_1_1_,
+        stockdaily0_.PRICE_CHANGE as PRICE_CH5_1_1_,
+        stockdaily0_.VOLUME as VOLUME6_1_1_,
+        stockdaily0_.DATE as DATE7_1_1_ 
+    from
+        stock_daily_record stockdaily0_ 
+    where
+        stockdaily0_.STOCK_ID=?
+        <= Get child(ren)
+
+	- public List<Stock> getStocks2() {
+		try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+			List<Stock> stocks = session.createQuery("SELECT DISTINCT s From Stock s INNER JOIN FETCH s.stockDailyRecords").list();
+			return stocks;
+			... 
+        <= We can safely call "printStocks()" any time, even AFTER we close the session
+        NOTE: This will make *one* select call:
+    select
+        distinct stock0_.STOCK_ID as STOCK_ID1_0_0_,
+        stockdaily1_.RECORD_ID as RECORD_I1_1_1_,
+        stock0_.STOCK_CODE as STOCK_CO2_0_0_,
+        stock0_.STOCK_NAME as STOCK_NA3_0_0_,
+        stockdaily1_.STOCK_ID as STOCK_ID2_1_1_,
+        stockdaily1_.PRICE_OPEN as PRICE_OP3_1_1_,
+        stockdaily1_.PRICE_CLOSE as PRICE_CL4_1_1_,
+        stockdaily1_.PRICE_CHANGE as PRICE_CH5_1_1_,
+        stockdaily1_.VOLUME as VOLUME6_1_1_,
+        stockdaily1_.DATE as DATE7_1_1_,
+        stockdaily1_.STOCK_ID as STOCK_ID2_1_0__,
+        stockdaily1_.RECORD_ID as RECORD_I1_1_0__ 
+    from
+        stock stock0_ 
+    inner join
+        stock_daily_record stockdaily1_ 
+            on stock0_.STOCK_ID=stockdaily1_.STOCK_ID
+
+  - Side notes:
+    - Must "DELETE FROM stock_daily_record; DELETE FROM stock" between runs, else:
+2020-01-15_22:57:35.910 WARN  o.h.e.jdbc.spi.SqlExceptionHelper - SQL Error: 20000, SQLState: 23505
+2020-01-15_22:57:35.910 ERROR o.h.e.jdbc.spi.SqlExceptionHelper - The statement was aborted because it would have caused a duplicate key value in a unique or primary key constraint or unique index identified by 'SQL0000000001-a228c043-016f-ac1b-fe29-00000616fd68' defined on 'STOCK'.
+ERROR: Aborting transaction: could not execute statement
+ERROR: could not execute statement
+org.hibernate.exception.ConstraintViolationException: could not execute statement
+	at org.hibernate.exception.internal.SQLExceptionTypeDelegate.convert(SQLExceptionTypeDelegate.java:59)
+	at org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:42)
+        ...
+	at org.hibernate.internal.SessionImpl.save(SessionImpl.java:699)
+	at com.mkyong.App.saveStock(App.java:29)
+	at com.mkyong.App.main(App.java:74)
+Caused by: org.apache.derby.shared.common.error.DerbySQLIntegrityConstraintViolationException: The statement was aborted because it would have caused a duplicate key value in a unique or primary key constraint or unique index identified by 'SQL0000000001-a228c043-016f-ac1b-fe29-00000616fd68' defined on 'STOCK'.
+	at org.apache.derby.impl.jdbc.SQLExceptionFactory.getSQLException(SQLExceptionFactory.java:93)
+	at org.apache.derby.impl.jdbc.Util.generateCsSQLException(Util.java:230)
+        ...
+        <= That's because the sample declared STOCK_NAME and STOCK_ID as "unique"...
+
+
+  - Best Practices for Many-To-One and One-To-Many Association Mappings:
+https://thoughts-on-java.org/best-practices-many-one-one-many-associations-mappings/
+    1. Don’t use unidirectional one-to-many associations
+       <= Precisely what we've done in ContactsApp.  Whoops...
+    2. Avoid the mapping of huge to-many associations
+       <= For large #/associated entities, it’s better to use a JPQL query with pagination. 
+    3. Think twice before using CascadeType.Remove
+    4. Use orphanRemoval when modeling parent-child associations
+       <= EX: @OneToMany(mappedBy = "order", orphanRemoval = true)
+    5. Implement helper methods to update bi-directional associations
+    6. Define FetchType.LAZY for @ManyToOne association
+       <= Default= FetchType.EAGER.  Don't do this!
         
 
 

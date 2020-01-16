@@ -3,7 +3,7 @@
 "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 <!-- Generated 26 April 2011 11:37:37 AM by Hibernate Tools 3.4.0.CR1 -->
 <hibernate-mapping>
-    <class name="com.mkyong.stock.StockDailyRecord" table="stock_daily_record" catalog="mkyongdb">
+    <class name="com.mkyong.stock.StockDailyRecord" table="stock_daily_record" catalog="app">
         <id name="recordId" type="java.lang.Integer">
             <column name="RECORD_ID" />
             <generator class="identity" />

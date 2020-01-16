@@ -1,3 +1,4 @@
 1.09.19   PSM  Initial checkin
 1.11.19   PSM  Added new hybrid JPA/Hibernate (base-app); H2-based JUnit tests
 1.12.19   PSM  Rewrote as "pure JPA" (jpa-syntax); auto-generation, "AssertAnnotations" and Mockito JUnit tests
+1.15.20   PSM  Added Mkyong "One to Many" example to resolve issues with Hibernate "failed to lazily initialize a collection" errors 

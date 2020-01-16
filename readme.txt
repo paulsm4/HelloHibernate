@@ -1,4 +1,4 @@
-* Hibernate tutorial:
+﻿* Hibernate tutorial:
   https://www.tutorialspoint.com/hibernate
 
 * Official documentation:
@@ -1573,7 +1573,135 @@ https://stackoverflow.com/questions/54163671/generationtarget-encountered-except
    }     
 
 ===================================================================================================
-           
+* One-to-Many example:
+  https://mkyong.com/hibernate/hibernate-one-to-many-relationship-example/
+
+  - Changes from original:
+    - Renamed "HibernateExample" => "OneToManyXml"
+    - pom.xml: MySqlDB => Derby 10.15.1.3, Hibernate 6.3.Final => 5.4.0.Final, Java version/maven-compiler-plugin
+    - hibernate.cfg.xml => Configured for Derby (vs. MySql), URL= jdbc:derby:d:/temp/mkyongdb
+
+  - One::Many:
+    - stock:
+        STOCK_ID ---+    stock_daily_record:
+        Stock_Code  |      DAILY_RECORD_ID
+        Stock_Name  |      Price_Open, Price_Close, Price_Change, Volume, Date
+                    +----> Stock_ID (FK)
+
+  - DBeaver:
+      New Connection > SQL > Type= Derby Embedded >
+        Path= D:\temp\mkyongdb;create=true, User= app, password= BLANK
+      [Test Connection] => Download/load drivers (derby, derbytools, derbyshared 10.14.1.3)
+         <= No-go: driver compiled with class files 53.0 (Java 9), JRE only class files 52 (Java 8)...
+    - Updated eclipse.ini
+      <= Changed JRE from jdk1.8.0_121 to jdk-13.0.1, ran "eclipse -clean"
+    - DBeaver > New Connection > SQL > Type= Derby Embedded >
+        Path= D:\temp\mkyongdb;create=true, User= app, password= BLANK
+      [Test Connection] => OK this time
+        Path= D:\temp\mkyongdb, [Finish]
+
+  - DBeaver > Projects > OneToManyXml > Connections > Derby Embedded > SQL Editor >
+
+ CREATE TABLE APP.stock (
+  STOCK_ID integer NOT NULL GENERATED ALWAYS AS IDENTITY,
+  STOCK_CODE varchar(10) NOT NULL,
+  STOCK_NAME varchar(20) NOT NULL,
+  PRIMARY KEY (STOCK_ID),
+  UNIQUE (STOCK_NAME, STOCK_CODE)
+) 
+
+CREATE TABLE  APP.stock_daily_record (
+  RECORD_ID integer NOT NULL GENERATED ALWAYS AS IDENTITY,
+  PRICE_OPEN float DEFAULT NULL,
+  PRICE_CLOSE float DEFAULT NULL,
+  PRICE_CHANGE float DEFAULT NULL,
+  VOLUME bigint DEFAULT NULL,
+  DATE date NOT NULL,
+  STOCK_ID integer NOT NULL,
+  PRIMARY KEY (RECORD_ID),
+  CONSTRAINT FK_STOCK_TRANSACTION_STOCK_ID FOREIGN KEY (STOCK_ID)
+  REFERENCES APP.stock (STOCK_ID) ON DELETE CASCADE
+)
+   <= Several constraints in the original MySQL DDL are incompatible with Derby syntax...
+   <<Saved to Scripts/Script.sql>>
+
+  - src > main > resources > hibernate.cfg.xml:
+    ------------------------------------------
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC
+"-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+
+<hibernate-configuration>
+	<session-factory>
+	<!-- 
+	 	<property name="hibernate.connection.driver_class">com.mysql.jdbc.Driver</property>
+		<property name="hibernate.connection.url">jdbc:mysql://localhost:3306/mkyongdb</property>
+		<property name="hibernate.connection.username">root</property>
+		<property name="hibernate.connection.password">password</property>
+		<property name="hibernate.dialect">org.hibernate.dialect.MySQLDialect</property>
+	 -->
+		<property name="hibernate.connection.driver_class">org.apache.derby.jdbc.EmbeddedDriver</property>
+		<property name="hibernate.connection.username">app</property>
+		<property name="hibernate.connection.password"></property>
+		<property name="hibernate.connection.url">jdbc:derby:d:/temp/mkyongdb</property>
+		<property name="hibernate.dialect">org.hibernate.dialect.DerbyTenSevenDialect</property>
+		<!-- Auto-generate tables: create|validate|update|create-drop
+		<property name="hibernate.hbm2ddl.auto">create</property>
+		-->
+		<property name="show_sql">true</property>
+		<property name="format_sql">true</property>
+		<mapping resource="com/mkyong/stock/Stock.hbm.xml" />
+		<mapping resource="com/mkyong/stock/StockDailyRecord.hbm.xml" />
+
+  - src > main > java > App.java:
+public class App {
+	public static void main(String[] args) {
+		System.out.println("Hibernate one to many (XML Mapping)");
+		Session session = HibernateUtil.getSessionFactory().openSession();
+
+		session.beginTransaction();
+
+		Stock stock = new Stock();
+        stock.setStockCode("7052");
+        stock.setStockName("PADINI");
+        session.save(stock);
+        
+        StockDailyRecord stockDailyRecords = new StockDailyRecord();
+        stockDailyRecords.setPriceOpen(new Float("1.2"));
+        stockDailyRecords.setPriceClose(new Float("1.1"));
+        stockDailyRecords.setPriceChange(new Float("10.0"));
+        stockDailyRecords.setVolume(3000000L);
+        stockDailyRecords.setDate(new Date());
+        
+        stockDailyRecords.setStock(stock);        
+        stock.getStockDailyRecords().add(stockDailyRecords);
+
+        session.save(stockDailyRecords);
+
+		session.getTransaction().commit();
+		System.out.println("Done");
+    }
+}  <= Saves "Stock" parent and "StockDailyRecord" children separately
+      "Read" not shown...
+
+    << Refactored App.java:
+         static void main(String[] args)
+         void saveStock(String[] stockData, String[] reportData)
+         List<Stock> getStocks()
+         void printStocks(List<Stock> stocks)
+      >>
   
+  - Eclipse > OneToManyXml > Debug configuration >
+      Name= App, class= com.mkyong.App, Stop in main= Y, JRE= jdk-13.0.1
+
+    - public void saveStock(String[] stockData, String[] reportData)
+2020-01-15_17:09:40.887 WARN  org.hibernate.orm.deprecation - HHH90000012: Recognized obsolete hibernate namespace http://hibernate.sourceforge.net/hibernate-mapping. Use namespace http://www.hibernate.org/dtd/hibernate-mapping instead.  Support for obsolete DTD/XSD namespaces may be removed at any time.
+      <= Otherwise, executed perfectly!
+         No problem reading "children"; either inside or outside of session.
+
+    <<See console-log-200115a.txt>>
+
+        
 
 

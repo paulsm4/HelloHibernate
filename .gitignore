@@ -14,6 +14,8 @@ packages/
 .settings/
 target/
 bin/
+.dbeaver/
+derby.log
 
 # Gradle
 .gradle/
